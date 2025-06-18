@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
+</head>
+
+<body class="bg-gray-100 p-4">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+
+    <!-- Product Display -->
+    <div id="product-info" class="flex items-center space-x-4 mb-6">
+      <img id="product-image" src="" alt="Product" class="w-16 h-16 rounded">
+      <div>
+        <h2 id="product-name" class="text-xl font-semibold">Loading...</h2>
+        <p class="text-sm text-gray-500" id="product-type"></p>
+      </div>
+    </div>
+
+    <!-- Order Form -->
+    <form id="order-form" class="space-y-4">
+      <input type="hidden" name="product" id="form-product" />
+      <input type="hidden" name="name" id="form-name" />
+      <input type="hidden" name="type" id="form-type" />
+
+      <div>
+        <label class="block font-medium">Full Name</label>
+        <input type="text" name="customerName" required class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label class="block font-medium">Phone Number</label>
+        <input type="tel" name="phone" required placeholder="e.g. 03XX-XXXXXXX" class="w-full border p-2 rounded" />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block font-medium">District</label>
+          <select name="district" required class="w-full border p-2 rounded">
+            <option value="">Select District</option>
+            <option value="Lahore">Lahore</option>
+            <option value="Karachi">Karachi</option>
+            <option value="Islamabad">Islamabad</option>
+            <!-- Add more districts -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium">City</label>
+          <input type="text" name="city" required class="w-full border p-2 rounded" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-medium">Area</label>
+        <input type="text" name="area" required class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label class="block font-medium">Full Address</label>
+        <textarea name="address" required class="w-full border p-2 rounded"></textarea>
+      </div>
+
+      <!-- Payment Ribbon -->
+      <div class="fixed bottom-0 left-0 right-0 bg-white shadow p-4 flex justify-between items-center border-t z-50">
+        <div id="price-display" class="text-lg font-semibold text-gray-700">
+          Loading price...
+        </div>
+        <button id="pay-button" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+          Pay Now
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <script>
+    //Firebase Plugin
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFmTqnpTzUpJ6-qOcQhSk3hBpZZvQ_4dk",
+      authDomain: "edmart-982fc.firebaseapp.com",
+      projectId: "edmart-982fc",
+      storageBucket: "edmart-982fc.firebasestorage.app",
+      messagingSenderId: "739511530893",
+      appId: "1:739511530893:web:769d7ade5699da95b0b9c4",
+      measurementId: "G-JW4Y62MQ5K"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const params = new URLSearchParams(window.location.search);
+    const product = params.get('product') || '';
+    const name = params.get('name') || '';
+    const image = params.get('image') || '';
+    const type = params.get('type'); // don't default to empty string
+
+
+    // Assume firebase has been initialized
+    const priceDisplay = document.getElementById("price-display");
+    const payButton = document.getElementById("pay-button");
+
+    async function fetchPrice() {
+      try {
+        const db = firebase.firestore();
+        const productRef = db.collection('products')
+          .doc(product.toLowerCase()) // Adjust if your Firestore structure differs
+
+        const doc = await productRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          let price = null;
+
+          // Build dynamic key for type-based price (if available)
+          if (type && data[name]?.[type]) {
+            price = data[name][type];
+          } else if (data[name]) {
+            price = data[name];
+          }
+
+          if (price) {
+            priceDisplay.textContent = `Rs. ${price}`;
+            payButton.onclick = () => {
+              document.getElementById("order-form").submit();
+            };
+          } else {
+            priceDisplay.textContent = 'Price not found';
+            payButton.disabled = true;
+            payButton.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+        } else {
+          priceDisplay.textContent = 'Product not found';
+        }
+      } catch (error) {
+        console.error("Error fetching price:", error);
+        priceDisplay.textContent = 'Error loading price';
+      }
+    }
+
+    fetchPrice();
+
+    // Update product display
+    document.getElementById('product-name').textContent = name;
+
+    let details = `Category: ${product}`;
+    if (type) {
+      details += `<br>Type: ${type}`;
+    }
+    document.getElementById('product-type').innerHTML = details;
+
+    document.getElementById('product-image').src = image;
+
+    // Set hidden form fields
+    document.getElementById('form-product').value = product;
+    document.getElementById('form-name').value = name;
+    if (type) {
+      document.getElementById('form-type').value = type;
+    }
+
+    // Handle form submission
+    document.getElementById('order-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // Here you'd create order data and send to payment provider
+      // For now, just redirect to mock payment page
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      // Store data in sessionStorage temporarily for after payment
+      sessionStorage.setItem('pendingOrder', JSON.stringify(data));
+
+      // Simulate redirect to payment broker
+      window.location.href = "payment.html";
+    });
+  </script>
+</body>
+
+</html>
