@@ -28,12 +28,40 @@
 
       <div>
         <label class="block font-semibold mb-1">Full Name</label>
-        <input type="text" name="customer" required class="w-full p-2 border rounded" />
+        <input type="text" name="customer" required class="w-full p-2 border rounded" placeholder="e.g. Hassan Soomro"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">Roll No.</label>
+        <input type="number" name="seat_number" required class="w-full p-2 border rounded" placeholder="1234567"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">Class Name</label>
+        <select name="class_name" id="class-name" required class="w-full p-2 border rounded">
+          <option value="">Select Class</option>
+          <option value="SSC-I (Class 9)">SSC-I (Class 9)</option>
+          <option value="SSC-II (Class 10)">SSC-II (Class 10)</option>
+          <option value="HSC-I (Class 11)">HSC-I (Class 11)</option>
+          <option value="HSC-II (Class 12)">HSC-II (Class 12)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">Record Year</label>
+        <input type="number" name="record_year" min="1965" max="2099" required class="w-full p-2 border rounded" />
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">Group</label>
+        <select name="group" id="group-select" required class="w-full p-2 border rounded">
+          <option value="">Select Group</option>
+        </select>
       </div>
 
       <div>
         <label class="block font-semibold mb-1">Phone Number</label>
-        <input type="tel" name="phone" required class="w-full p-2 border rounded" />
+        <input type="tel" name="phone" required class="w-full p-2 border rounded" placeholder="e.g. 03123456789"/>
       </div>
 
       <div class="space-y-2">
@@ -85,6 +113,20 @@
     const productImage = document.getElementById("product-image");
     const priceDisplay = document.getElementById("price-display");
     const payButton = document.getElementById("pay-button");
+
+    const classSelect = document.getElementById("class-name");
+    const groupSelect = document.getElementById("group-select");
+
+    classSelect.addEventListener("change", () => {
+      const val = classSelect.value;
+      groupSelect.innerHTML = '<option value="">Select Group</option>';
+      if (val === "SSC-I (Class 9)" || val === "SSC-II (Class 10)") {
+        ["Science", "General"].forEach(g => groupSelect.innerHTML += `<option value="${g}">${g}</option>`);
+      } else if (val === "HSC-I (Class 11)" || val === "HSC-II (Class 12)") {
+        ["Pre-Medical", "Pre-Engineering", "Pre-Computer Science", "Commerce", "Humanities-R", "Humanities-P", "Home Economics"]
+          .forEach(g => groupSelect.innerHTML += `<option value="${g}">${g}</option>`);
+      }
+    });
 
     let currentProduct = null;
 
